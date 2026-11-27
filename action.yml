@@ -1,6 +1,6 @@
 name: "Scalr Github Action"
 description: "Installs Scalr and OpenTofu/Terraform CLI and configures them for Scalr use."
-author: "Scalr"
+author: 'step-security'
 inputs:
   scalr_hostname:
     description: "The hostname of a Scalr install. Example: username.scalr.io."

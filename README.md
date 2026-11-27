@@ -36,8 +36,8 @@ The following steps can access OpenTofu/Terraform outputs:
 
 ```yaml
 steps:
-  - uses: actions/checkout@v6
-  - uses: Scalr/scalr-action@v1
+  - uses: actions/checkout@v7
+  - uses: step-security/scalr-action@v1
     with:
       scalr_hostname: "<your-account>.scalr.io"
       scalr_token: ${{ secrets.SCALR_TOKEN }}
@@ -80,8 +80,8 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v6
-      - uses: Scalr/scalr-action@v1
+      - uses: actions/checkout@v7
+      - uses: step-security/scalr-action@v1
         with:
           scalr_hostname: "<your-account>.scalr.io"
           scalr_service_account_email: "my-sa@env-xxxxxxxx.scalr.io"
@@ -170,8 +170,8 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: Scalr/scalr-action@v1
+      - uses: actions/checkout@v7
+      - uses: step-security/scalr-action@v1
         with:
           scalr_hostname: "<your-account>.scalr.io"
           scalr_token: ${{ secrets.SCALR_TOKEN }}
@@ -205,4 +205,4 @@ bun run build
 
 ## Contributing
 
-To contribute to this project, please see the [contribution guidelines](https://github.com/Scalr/scalr-action/blob/master/CONTRIBUTING.md). Also please fill out the [Contribution Agreement](https://github.com/Scalr/scalr-action/blob/master/Contribution_Agreement.md) and send it to support@scalr.com
+To contribute to this project, please see the [contribution guidelines](https://github.com/step-security/scalr-action/blob/master/CONTRIBUTING.md). Also please fill out the [Contribution Agreement](https://github.com/step-security/scalr-action/blob/master/Contribution_Agreement.md) and send it to support@scalr.com
