@@ -192,17 +192,3 @@ The action registers a `post:` step that deletes `~/.scalr/scalr.conf` and the O
 ## Scalr CLI
 
 More information about how to use the Scalr CLI provided by this Action, please refer to the [Scalr CLI repository](https://github.com/Scalr/scalr-cli).
-
-## Development
-
-This repository uses [Bun](https://bun.sh/) as the primary package manager.
-
-```bash
-bun install
-bun run test
-bun run build
-```
-
-## Contributing
-
-To contribute to this project, please see the [contribution guidelines](https://github.com/step-security/scalr-action/blob/master/CONTRIBUTING.md). Also please fill out the [Contribution Agreement](https://github.com/step-security/scalr-action/blob/master/Contribution_Agreement.md) and send it to support@scalr.com

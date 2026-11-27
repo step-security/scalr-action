@@ -18,6 +18,7 @@ function createCore(inputs = {}) {
   const outputs = [];
   const failures = [];
   const secrets = [];
+  const warnings = [];
 
   return {
     addPath: () => {},
@@ -27,11 +28,13 @@ function createCore(inputs = {}) {
     setFailed: (message) => failures.push(message),
     setOutput: (name, value) => outputs.push({ name, value }),
     setSecret: (value) => secrets.push(value),
+    warning: (message) => warnings.push(message),
     exports,
     failures,
     infoMessages,
     outputs,
     secrets,
+    warnings,
   };
 }
 
@@ -64,6 +67,7 @@ function createToolcache() {
 function createFs() {
   const writes = [];
   return {
+    readFile: async () => Buffer.alloc(0),
     writeFile: async (file, contents, options) => {
       writes.push({ file, contents, options });
     },
@@ -155,6 +159,7 @@ test("runAction skips autodetect when explicit binary_version is provided", asyn
     fetchImpl: async () => ({
       ok: true,
       url: "https://github.com/Scalr/scalr-cli/releases/tag/v0.17.7",
+      text: async () => "",
     }),
     fsModule,
     ioModule,
@@ -201,6 +206,7 @@ test("runAction resolves workspace id from environment and workspace names", asy
     fetchImpl: async () => ({
       ok: true,
       url: "https://github.com/Scalr/scalr-cli/releases/tag/v0.17.7",
+      text: async () => "",
     }),
     fsModule,
     ioModule: {
@@ -274,6 +280,7 @@ test("runAction autodetects Terraform version and installs wrapper using custom 
     fetchImpl: async () => ({
       ok: true,
       url: "https://github.com/Scalr/scalr-cli/releases/tag/v0.17.7",
+      text: async () => "",
     }),
     fsModule,
     ioModule: {
@@ -328,6 +335,7 @@ test("runAction uses USERPROFILE for Scalr config on Windows when HOME is unset"
     fetchImpl: async () => ({
       ok: true,
       url: "https://github.com/Scalr/scalr-cli/releases/tag/v0.17.7",
+      text: async () => "",
     }),
     fsModule,
     ioModule: {
@@ -360,8 +368,9 @@ test("main reports missing workspace when autodetect is requested", async () => 
     fetchImpl: async () => ({
       ok: true,
       url: "https://github.com/Scalr/scalr-cli/releases/tag/v0.17.7",
+      text: async () => "",
     }),
-    fsModule: { writeFile: async () => {} },
+    fsModule: { readFile: async () => Buffer.alloc(0), writeFile: async () => {} },
     ioModule: { cp: async () => {}, mkdirP: async () => {}, mv: async () => {} },
     osModule: {
       arch: () => "x64",
@@ -487,6 +496,7 @@ test("runAction masks the Scalr token as a secret", async () => {
     fetchImpl: async () => ({
       ok: true,
       url: "https://github.com/Scalr/scalr-cli/releases/tag/v0.17.7",
+      text: async () => "",
     }),
     fsModule: createFs(),
     ioModule: { cp: async () => {}, mkdirP: async () => {}, mv: async () => {} },
@@ -515,6 +525,7 @@ test("runAction obtains a Scalr token via OIDC when scalr_token is empty", async
     fetchImpl: async () => ({
       ok: true,
       url: "https://github.com/Scalr/scalr-cli/releases/tag/v0.17.7",
+      text: async () => "",
     }),
     fsModule,
     ioModule: { cp: async () => {}, mkdirP: async () => {}, mv: async () => {} },
@@ -569,6 +580,7 @@ test("runAction prefers an explicit scalr_token over OIDC", async () => {
     fetchImpl: async () => ({
       ok: true,
       url: "https://github.com/Scalr/scalr-cli/releases/tag/v0.17.7",
+      text: async () => "",
     }),
     fsModule: createFs(),
     ioModule: { cp: async () => {}, mkdirP: async () => {}, mv: async () => {} },
@@ -598,6 +610,7 @@ test("runAction writes credential files with restricted permissions", async () =
     fetchImpl: async () => ({
       ok: true,
       url: "https://github.com/Scalr/scalr-cli/releases/tag/v0.17.7",
+      text: async () => "",
     }),
     fsModule,
     ioModule: { cp: async () => {}, mkdirP: async () => {}, mv: async () => {} },
@@ -631,6 +644,7 @@ test("runAction writes credential files with safe JSON/HCL content", async () =>
     fetchImpl: async () => ({
       ok: true,
       url: "https://github.com/Scalr/scalr-cli/releases/tag/v0.17.7",
+      text: async () => "",
     }),
     fsModule,
     ioModule: { cp: async () => {}, mkdirP: async () => {}, mv: async () => {} },
@@ -673,6 +687,7 @@ test("runAction skips downloads when binaries are cached", async () => {
     fetchImpl: async () => ({
       ok: true,
       url: "https://github.com/Scalr/scalr-cli/releases/tag/v0.17.7",
+      text: async () => "",
     }),
     fsModule: createFs(),
     ioModule: {

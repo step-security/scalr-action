@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const os = require("os");
 const fs = require("fs").promises;
 const path = require("path");
@@ -6,8 +7,11 @@ const core = require("@actions/core");
 const toolcache = require("@actions/tool-cache");
 const io = require("@actions/io");
 const {
+  buildOpenTofuChecksumUrl,
   buildOpenTofuDownloadUrl,
+  buildScalrCliChecksumUrl,
   buildScalrCliDownloadUrl,
+  buildTerraformChecksumUrl,
   buildTerraformDownloadUrl,
 } = require("./download-url");
 const { runCommand } = require("./run-command");
@@ -141,6 +145,36 @@ function getWrapperSourcePath(pathModule = path, entryFilePath) {
     : pathModule.resolve(entryDir, "..", "wrapper", "index.js");
 }
 
+async function verifyChecksum(archivePath, checksumUrl, expectedFilename, fetchImpl = fetch, fsModule = fs, coreModule = core) {
+  const response = await fetchImpl(checksumUrl);
+  if (!response.ok) {
+    coreModule.warning(`Checksum file not found for ${expectedFilename} (${response.status}), skipping verification`);
+    return;
+  }
+  const text = await response.text();
+
+  let expectedHash;
+  for (const line of text.trim().split("\n")) {
+    const parts = line.trim().split(/\s+/);
+    if (parts.length >= 2 && parts[1] === expectedFilename) {
+      expectedHash = parts[0];
+      break;
+    }
+  }
+
+  if (!expectedHash) {
+    coreModule.warning(`Checksum for ${expectedFilename} not found in checksum file, skipping verification`);
+    return;
+  }
+
+  const content = await fsModule.readFile(archivePath);
+  const actualHash = crypto.createHash("sha256").update(content).digest("hex");
+
+  if (actualHash !== expectedHash) {
+    coreModule.warning(`Checksum mismatch for ${expectedFilename}: expected ${expectedHash}, got ${actualHash}`);
+  }
+}
+
 async function runAction({
   coreModule = core,
   toolcacheModule = toolcache,
@@ -154,8 +188,11 @@ async function runAction({
   resolveWorkspaceIdByNameImpl = resolveWorkspaceIdByName,
   resolveScalrTokenFromOidcImpl = resolveScalrTokenFromOidc,
   runCommandImpl = runCommand,
+  buildOpenTofuChecksumUrlImpl = buildOpenTofuChecksumUrl,
   buildOpenTofuDownloadUrlImpl = buildOpenTofuDownloadUrl,
+  buildScalrCliChecksumUrlImpl = buildScalrCliChecksumUrl,
   buildScalrCliDownloadUrlImpl = buildScalrCliDownloadUrl,
+  buildTerraformChecksumUrlImpl = buildTerraformChecksumUrl,
   buildTerraformDownloadUrlImpl = buildTerraformDownloadUrl,
   entryFilePath,
 } = {}) {
@@ -220,6 +257,11 @@ async function runAction({
     );
     const scalrCliArchive = await toolcacheModule.downloadTool(scalrCliUrl);
     if (!scalrCliArchive) throw new Error("Failed to download Scalr CLI");
+
+    coreModule.info("Verifying Scalr CLI checksum");
+    const scalrCliChecksumUrl = buildScalrCliChecksumUrlImpl(scalrCliVersion);
+    const scalrCliFilename = scalrCliUrl.split("/").pop();
+    await verifyChecksum(scalrCliArchive, scalrCliChecksumUrl, scalrCliFilename, fetchImpl, fsModule, coreModule);
 
     coreModule.info("Decompressing Scalr CLI binary");
     scalrCliPath = await toolcacheModule.extractZip(scalrCliArchive);
@@ -310,6 +352,13 @@ async function runAction({
     const binaryArchive = await toolcacheModule.downloadTool(downloadUrl);
     if (!binaryArchive) throw new Error("Failed to download tofu/terraform");
 
+    coreModule.info("Verifying OpenTofu/Terraform checksum");
+    const binaryChecksumUrl = iacPlatform === "terraform"
+      ? buildTerraformChecksumUrlImpl(version)
+      : buildOpenTofuChecksumUrlImpl(version);
+    const binaryFilename = downloadUrl.split("/").pop();
+    await verifyChecksum(binaryArchive, binaryChecksumUrl, binaryFilename, fetchImpl, fsModule, coreModule);
+
     coreModule.info("Decompressing OpenTofu/Terraform binary");
     binaryPath = await toolcacheModule.extractZip(binaryArchive);
     if (!binaryPath) throw new Error("Failed to decompress tofu/terraform");
@@ -399,4 +448,5 @@ module.exports = {
   runAction,
   validateWorkspaceInputs,
   validateRequestedVersion,
+  verifyChecksum,
 };
